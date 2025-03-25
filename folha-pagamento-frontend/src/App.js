@@ -2,6 +2,7 @@ import React from "react";
 import Funcionarios from "./Funcionarios";
 import CalcularFolha from "./CalcularFolha";
 import CadastrarFuncionario from "./CadastrarFuncionario";
+import Relatorio from "./Relatorio";
 
 function App() {
     return (
@@ -10,6 +11,7 @@ function App() {
             <Funcionarios />
             <CalcularFolha />
             <CadastrarFuncionario />
+            <Relatorio />
         </div>
     );
 }
