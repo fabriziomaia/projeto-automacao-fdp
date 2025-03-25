@@ -63,3 +63,14 @@ app.get("/calcular-folha/:id", (req, res) => {
         }
     });
 });
+
+// Rota para adicionar um novo funcionário
+app.post("/funcionarios", (req, res) => {
+    const { nome, cargo, salario, data_contratacao } = req.body;
+
+    const query = "INSERT INTO funcionarios (nome, cargo, salario, data_contratacao) VALUES (?, ?, ?, ?)";
+    db.query(query, [nome, cargo, salario, data_contratacao], (err, result) => {
+        if (err) throw err;
+        res.status(201).json({ message: "Funcionário cadastrado com sucesso!" });
+    });
+});
