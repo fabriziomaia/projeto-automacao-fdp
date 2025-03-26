@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 function Funcionarios() {
     const [funcionarios, setFuncionarios] = useState([]);
@@ -16,7 +17,10 @@ function Funcionarios() {
             <ul>
                 {funcionarios.map(func => (
                     <li key={func.id}>
-                        {func.nome} - {func.cargo} - R$ {func.salario}
+                        {func.nome} - {func.cargo} - R$ {func.salario} 
+                        <Link to={`/editar/${func.id}`}>
+                            <button style={{ marginLeft: "10px" }}>Editar</button>
+                        </Link>
                     </li>
                 ))}
             </ul>

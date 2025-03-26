@@ -71,6 +71,20 @@ app.post("/funcionarios", (req, res) => {
     });
 });
 
+// Rota para editar um funcionário
+app.put("/funcionarios/:id", (req, res) => {
+    const { id } = req.params;
+    const { nome, cargo, salario, data_contratacao } = req.body;
+
+    const query = "UPDATE funcionarios SET nome = ?, cargo = ?, salario = ?, data_contratacao = ? WHERE id = ?";
+    db.query(query, [nome, cargo, salario, data_contratacao, id], (err, result) => {
+        if (err) {
+            return res.status(500).json({ error: "Erro ao atualizar funcionário" });
+        }
+        res.json({ message: "Funcionário atualizado com sucesso!" });
+    });
+});
+
 // Rota para gerar o relatório de funcionários em PDF
 app.get("/relatorio-funcionarios", (req, res) => {
     console.log("Rota /relatorio-funcionarios chamada");
