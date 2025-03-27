@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Folha de Pagamento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Layout Principal -->
+    <div class="flex h-screen" x-data="{ section: 'home' }">
+        
+        <!-- Menu Lateral -->
+        <aside class="w-64 bg-blue-800 text-white flex flex-col">
+            <div class="p-4 text-lg font-semibold text-center">Folha de Pagamento</div>
+            <nav class="flex-1">
+                <ul>
+                    <li class="px-6 py-3 hover:bg-blue-700 cursor-pointer" @click="section = 'home'">🏠 Início</li>
+                    <li class="px-6 py-3 hover:bg-blue-700 cursor-pointer" @click="section = 'funcionarios'">👨‍💼 Exibir Funcionários</li>
+                    <li class="px-6 py-3 hover:bg-blue-700 cursor-pointer" @click="section = 'cadastro'">➕ Cadastrar Funcionário</li>
+                    <li class="px-6 py-3 hover:bg-blue-700 cursor-pointer" @click="section = 'calculo'">📊 Calcular Folha</li>
+                    <li class="px-6 py-3 hover:bg-blue-700 cursor-pointer" @click="section = 'relatorio'">📜 Gerar Relatório</li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 p-6">
+            
+            <!-- Início -->
+            <section x-show="section === 'home'">
+                <h1 class="text-2xl font-semibold mb-4">Bem-vindo ao Dashboard</h1>
+                <p class="text-gray-700">Utilize o menu lateral para navegar entre as funcionalidades.</p>
+            </section>
+
+            <!-- Exibir Funcionários -->
+            <section x-show="section === 'funcionarios'" class="bg-white p-4 shadow-md rounded-lg">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Lista de Funcionários</h2>
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="border border-gray-300 px-4 py-2">Nome</th>
+                            <th class="border border-gray-300 px-4 py-2">Cargo</th>
+                            <th class="border border-gray-300 px-4 py-2">Salário</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="odd:bg-gray-100 even:bg-white">
+                            <td class="border border-gray-300 px-4 py-2">João Silva</td>
+                            <td class="border border-gray-300 px-4 py-2">Gerente</td>
+                            <td class="border border-gray-300 px-4 py-2">R$ 5.000,00</td>
+                        </tr>
+                        <!-- Adicione mais funcionários aqui -->
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Cadastrar Funcionário -->
+            <section x-show="section === 'cadastro'" class="bg-white p-4 shadow-md rounded-lg">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Cadastrar Funcionário</h2>
+                <form class="space-y-4">
+                    <input type="text" placeholder="Nome" class="w-full border p-2 rounded-lg">
+                    <input type="text" placeholder="Cargo" class="w-full border p-2 rounded-lg">
+                    <input type="number" placeholder="Salário" class="w-full border p-2 rounded-lg">
+                    <button class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Cadastrar</button>
+                </form>
+            </section>
+
+            <!-- Calcular Folha -->
+            <section x-show="section === 'calculo'" class="bg-white p-4 shadow-md rounded-lg">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Calcular Folha de Pagamento</h2>
+                <form class="space-y-4">
+                    <input type="number" placeholder="Salário Base" class="w-full border p-2 rounded-lg">
+                    <input type="number" placeholder="Horas Extras" class="w-full border p-2 rounded-lg">
+                    <input type="number" placeholder="Descontos" class="w-full border p-2 rounded-lg">
+                    <button class="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600">Calcular</button>
+                </form>
+            </section>
+
+            <!-- Relatório -->
+            <section x-show="section === 'relatorio'" class="bg-white p-4 shadow-md rounded-lg">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Relatório de Folha de Pagamento</h2>
+                <p class="text-gray-600">Total de salários pagos: <span class="font-semibold text-green-600">R$ 50.000,00</span></p>
+            </section>
+
+        </main>
+    </div>
+    <script>
+        import React, { useState, useEffect } from 'react';
+
+        function FuncionarioList() {
+          const [funcionarios, setFuncionarios] = useState([]);
+        
+          useEffect(() => {
+            // Fazendo requisição GET para a API
+            fetch('/api/funcionarios')  // Altere para sua URL de API
+              .then((response) => response.json())
+              .then((data) => setFuncionarios(data))
+              .catch((error) => console.error('Erro ao carregar dados: ', error));
+          }, []);
+        
+          return (
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="border border-gray-300 px-4 py-2 text-left">Nome</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Cargo</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Salário</th>
+                </tr>
+              </thead>
+              <tbody>
+                {funcionarios.map((funcionario) => (
+                  <tr key={funcionario.id} className="odd:bg-gray-100 even:bg-white">
+                    <td className="border border-gray-300 px-4 py-2">{funcionario.nome}</td>
+                    <td className="border border-gray-300 px-4 py-2">{funcionario.cargo}</td>
+                    <td className="border border-gray-300 px-4 py-2">{funcionario.salario}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        }
+        
+        export default FuncionarioList;
+    </script>
+</body>
+</html>
