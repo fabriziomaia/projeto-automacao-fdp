@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Folha de Pagamento</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Gerar Folha de Pagamento</h1>
+        <form id="formFolha" method="POST" action="/calcular">
+            <input type="text" name="nome" placeholder="Nome" required>
+            <input type="text" name="matricula" placeholder="Matrícula" required>
+            <input type="text" name="cargo" placeholder="Cargo" required>
+            <input type="number" name="salario_base" placeholder="Salário Base" step="0.01" required>
+            <input type="number" name="horas_extras_50" placeholder="Horas Extras 50%" step="0.01">
+            <input type="number" name="comissoes" placeholder="Comissões" step="0.01">
+            <input type="number" name="vale_transporte" placeholder="Vale Transporte" step="0.01">
+            <input type="number" name="plano_saude" placeholder="Plano de Saúde" step="0.01">
+
+            <button type="submit">Gerar PDF</button>
+        </form>
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

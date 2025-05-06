@@ -1,0 +1,13 @@
+def calcular_irrf(salario, inss):
+    # Tabela 2025 simplificada (valores fictícios)
+    base = salario - inss
+    if base <= 2428.80:
+        return 0.0
+    elif base <= 2826.65:
+        return base * 0.075 - 182.16
+    elif base <= 3751.05:
+        return base * 0.15 - 394.16
+    elif base <= 4664.68:
+        return base * 0.225 - 675.49
+    else:
+        return base * 0.275 - 908.73

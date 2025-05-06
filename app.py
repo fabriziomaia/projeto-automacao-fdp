@@ -1,141 +1,43 @@
-from dataclasses import dataclass
-from fpdf import FPDF
+from flask import Flask, render_template, request, send_file
+from folha import Funcionario, calcular_folha, gerar_pdf_folha
+import os
 
-@dataclass
-class Funcionario:
-    nome: str
-    matricula: str
-    cargo: str
-    salario_base: float
-    adicional_periculosidade: float = 0.0
-    adicional_insalubridade: float = 0.0
-    adicional_noturno: float = 0.0
-    horas_extras_50: float = 0.0
-    horas_extras_100: float = 0.0
-    comissoes: float = 0.0
-    premios: float = 0.0
-    plr: float = 0.0
-    ferias: float = 0.0
-    decimo_terceiro: float = 0.0
+app = Flask(__name__)
+os.makedirs("relatórios", exist_ok=True)
 
-    # Descontos
-    vale_transporte: float = 0.0
-    vale_refeicao: float = 0.0
-    plano_saude: float = 0.0
-    pensao_alimenticia: float = 0.0
-    emprestimo_consignado: float = 0.0
+@app.route("/")
+def index():
+    return render_template("index.html")
 
-def calcular_inss(salario):
-    # Tabela 2025 simplificada (valores fictícios)
-    if salario <= 1518:
-        return salario * 0.075
-    elif salario <= 2793.88:
-        return (1518 * 0.075) + ((salario - 1518) * 0.09)
-    elif salario <= 4190.83:
-        return (1518 * 0.075) + ((2793.88 - 1518) * 0.09) + ((salario - 2793.88) * 0.12)
-    elif salario <= 8157.41:
-        return (1518 * 0.075) + ((2793.88 - 1518) * 0.09) + ((4190.83 - 2793.88) * 0.12) + ((salario - 4190.83) * 0.14)
-    else:
-        return 1906.04  # Teto do INSS
+@app.route("/calcular", methods=["POST"])
+def calcular():
+    dados = request.form
 
-def calcular_irrf(salario, inss):
-    # Tabela 2025 simplificada (valores fictícios)
-    base = salario - inss
-    if base <= 2428.80:
-        return 0.0
-    elif base <= 2826.65:
-        return base * 0.075 - 182.16
-    elif base <= 3751.05:
-        return base * 0.15 - 394.16
-    elif base <= 4664.68:
-        return base * 0.225 - 675.49
-    else:
-        return base * 0.275 - 908.73
-
-def calcular_folha(f: Funcionario):
-    # VENCIMENTOS
-    proventos = (
-        f.salario_base +
-        f.adicional_periculosidade +
-        f.adicional_insalubridade +
-        f.adicional_noturno +
-        f.horas_extras_50 +
-        f.horas_extras_100 +
-        f.comissoes +
-        f.premios +
-        f.plr +
-        f.ferias +
-        f.decimo_terceiro
+    funcionario = Funcionario(
+        nome=dados["nome"],
+        matricula=dados["matricula"],
+        cargo=dados["cargo"],
+        salario_base=float(dados["salario_base"]),
+        adicional_periculosidade=float(dados.get("adicional_periculosidade", 0)),
+        adicional_insalubridade=float(dados.get("adicional_insalubridade", 0)),
+        adicional_noturno=float(dados.get("adicional_noturno", 0)),
+        horas_extras_50=float(dados.get("horas_extras_50", 0)),
+        horas_extras_100=float(dados.get("horas_extras_100", 0)),
+        comissoes=float(dados.get("comissoes", 0)),
+        premios=float(dados.get("premios", 0)),
+        plr=float(dados.get("plr", 0)),
+        ferias=float(dados.get("ferias", 0)),
+        decimo_terceiro=float(dados.get("decimo_terceiro", 0)),
+        vale_transporte=float(dados.get("vale_transporte", 0)),
+        vale_refeicao=float(dados.get("vale_refeicao", 0)),
+        plano_saude=float(dados.get("plano_saude", 0)),
+        pensao_alimenticia=float(dados.get("pensao_alimenticia", 0)),
+        emprestimo_consignado=float(dados.get("emprestimo_consignado", 0)),
     )
 
-    # DESCONTOS LEGAIS
-    inss = calcular_inss(proventos)
-    irrf = calcular_irrf(proventos, inss)
+    resultado = calcular_folha(funcionario)
+    gerar_pdf_folha(funcionario, resultado)
+    return send_file(f"./relatórios/folha_{funcionario.matricula}.pdf", as_attachment=True)
 
-    # OUTROS DESCONTOS
-    descontos = (
-        inss +
-        irrf +
-        f.vale_transporte +
-        f.vale_refeicao +
-        f.plano_saude +
-        f.pensao_alimenticia +
-        f.emprestimo_consignado
-    )
-
-    # RESULTADOS
-    liquido = proventos - descontos
-    fgts = proventos * 0.08  # Apenas como exemplo de encargo
-    custo_empresa = proventos + fgts
-
-    return {
-        "salario_bruto": round(proventos, 2),
-        "inss": round(inss, 2),
-        "irrf": round(irrf, 2),
-        "total_descontos": round(descontos, 2),
-        "salario_liquido": round(liquido, 2),
-        "fgts": round(fgts, 2),
-        "custo_empresa": round(custo_empresa, 2),
-    }
-
-def gerar_pdf_folha(funcionario: Funcionario, calculo: dict):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-
-    pdf.set_title(f"Folha de Pagamento - {funcionario.nome}")
-
-    pdf.cell(0, 10, f"Folha de Pagamento", ln=True, align='C')
-    pdf.ln(10)
-
-    pdf.cell(0, 10, f"Funcionário: {funcionario.nome}", ln=True)
-    pdf.cell(0, 10, f"Matrícula: {funcionario.matricula}", ln=True)
-    pdf.cell(0, 10, f"Cargo: {funcionario.cargo}", ln=True)
-    pdf.ln(5)
-
-    pdf.cell(0, 10, f"Salário Base: R$ {funcionario.salario_base:.2f}", ln=True)
-    pdf.cell(0, 10, f"Proventos Totais: R$ {calculo['salario_bruto']:.2f}", ln=True)
-    pdf.cell(0, 10, f"INSS: R$ {calculo['inss']:.2f}", ln=True)
-    pdf.cell(0, 10, f"IRRF: R$ {calculo['irrf']:.2f}", ln=True)
-    pdf.cell(0, 10, f"Total de Descontos: R$ {calculo['total_descontos']:.2f}", ln=True)
-    pdf.cell(0, 10, f"Salário Líquido: R$ {calculo['salario_liquido']:.2f}", ln=True)
-    pdf.cell(0, 10, f"FGTS (8%): R$ {calculo['fgts']:.2f}", ln=True)
-    pdf.cell(0, 10, f"Custo Total da Empresa: R$ {calculo['custo_empresa']:.2f}", ln=True)
-
-    pdf.output(f"./Relatórios/folha_{funcionario.matricula}.pdf")
-
-funcionario = Funcionario(
-    nome=input('Nome: '),
-    matricula=input('Matrícula: '),
-    cargo=input('Cargo: '),
-    salario_base=float(input('Salário base: ')),
-    horas_extras_50=float(input('Horas Extras 50%: ')),
-    comissoes=float(input('Comissões: ')),
-    vale_transporte=float(input('Vale transporte: ')),
-    plano_saude=float(input('plano de saude: '))
-)
-
-resultado = calcular_folha(funcionario)
-print(resultado)
-
-gerar_pdf_folha(funcionario, resultado)
+if __name__ == "__main__":
+    app.run(debug=True)
