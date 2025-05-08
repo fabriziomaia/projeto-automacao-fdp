@@ -30,11 +30,11 @@ def calcular_inss(salario):
     if salario <= 1518:
         return salario * 0.075
     elif salario <= 2793.88:
-        return (1518 * 0.075) + ((salario - 1518) * 0.09)
+        return (salario * 0.09) - 22.77
     elif salario <= 4190.83:
-        return (1518 * 0.075) + ((2793.88 - 1518) * 0.09) + ((salario - 2793.88) * 0.12)
+        return (salario * 0.12) - 106.59
     elif salario <= 8157.41:
-        return (1518 * 0.075) + ((2793.88 - 1518) * 0.09) + ((4190.83 - 2793.88) * 0.12) + ((salario - 4190.83) * 0.14)
+        return (salario * 0.14) - 190.4
     else:
         return 1906.04  # Teto do INSS
     
