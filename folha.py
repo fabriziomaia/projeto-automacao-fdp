@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from fpdf import FPDF
+import csv
+from datetime import datetime
 
 @dataclass
 class Funcionario:
@@ -104,25 +106,29 @@ def calcular_folha(f: Funcionario):
         "salario_liquido": round(liquido, 2),
         "fgts": round(fgts, 2),
         "custo_empresa": round(custo_empresa, 2),
+        "vale_transporte": round(f.vale_transporte, 2),
+        "plano_saude": round(f.plano_saude, 2)
     }
 
 def gerar_pdf_folha(funcionario: Funcionario, calculo: dict):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
-
+    
     pdf.set_title(f"Folha de Pagamento - {funcionario.nome}")
-
+    pdf.set_font("Arial", style="B", size=16)
     pdf.cell(0, 10, f"Folha de Pagamento", ln=True, align='C')
     pdf.ln(10)
 
+    pdf.set_font("Arial", size=12)
     pdf.cell(0, 10, f"Funcionário: {funcionario.nome}", ln=True)
     pdf.cell(0, 10, f"Matrícula: {funcionario.matricula}", ln=True)
     pdf.cell(0, 10, f"Cargo: {funcionario.cargo}", ln=True)
     pdf.ln(5)
 
     pdf.cell(0, 10, f"Salário Base: R$ {funcionario.salario_base:.2f}", ln=True)
-    pdf.cell(0, 10, f"Proventos Totais: R$ {calculo['salario_bruto']:.2f}", ln=True)
+    pdf.cell(0, 10, f"Salário Bruto: R$ {calculo['salario_bruto']:.2f}", ln=True)
+    pdf.cell(0, 10, f"Vale Transporte: R$ {calculo['vale_transporte']:.2f}", ln=True)
+    pdf.cell(0, 10, f"Plano Saúde: R$ {calculo['plano_saude']:.2f}", ln=True)
     pdf.cell(0, 10, f"INSS: R$ {calculo['inss']:.2f}", ln=True)
     pdf.cell(0, 10, f"IRRF: R$ {calculo['irrf']:.2f}", ln=True)
     pdf.cell(0, 10, f"Total de Descontos: R$ {calculo['total_descontos']:.2f}", ln=True)
@@ -130,7 +136,19 @@ def gerar_pdf_folha(funcionario: Funcionario, calculo: dict):
     pdf.cell(0, 10, f"FGTS (8%): R$ {calculo['fgts']:.2f}", ln=True)
     pdf.cell(0, 10, f"Custo Total da Empresa: R$ {calculo['custo_empresa']:.2f}", ln=True)
 
-    pdf.output(f"./Relatórios/folha_{funcionario.matricula}.pdf")
+    caminho_pdf = f"./relatorios/folha_{funcionario.matricula}.pdf"
+    pdf.output(caminho_pdf)
+
+    # Salvar no histórico
+    with open("relatorios.csv", "a", newline="", encoding="utf-8") as file:
+        writer = csv.writer(file)
+        writer.writerow([
+            funcionario.nome,
+            funcionario.matricula,
+            funcionario.cargo,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            caminho_pdf
+        ])
 
 # funcionario = Funcionario(
 #     nome=input('Nome: '),

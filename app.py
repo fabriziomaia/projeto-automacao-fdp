@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, send_file
 from folha import Funcionario, calcular_folha, gerar_pdf_folha
 import os
+import csv
 
 app = Flask(__name__)
-os.makedirs("relatórios", exist_ok=True)
+os.makedirs("relatorios", exist_ok=True)
 
 @app.route("/")
 def index():
@@ -36,8 +37,29 @@ def calcular():
     )
 
     resultado = calcular_folha(funcionario)
-    gerar_pdf_folha(funcionario, resultado)
-    return send_file(f"./relatórios/folha_{funcionario.matricula}.pdf", as_attachment=True)
+    gerar_pdf_folha(funcionario, resultado)      
+    return send_file(f"./relatorios/folha_{funcionario.matricula}.pdf", as_attachment=True)
+
+@app.route("/relatorios")
+def relatorios():
+    registros = []
+    if os.path.exists("relatorios.csv"):
+        with open("relatorios.csv", newline="", encoding="utf-8") as file:
+            reader = csv.reader(file)
+            for row in reader:
+                registros.append({
+                    "nome": row[0],
+                    "matricula": row[1],
+                    "cargo": row[2],
+                    "data": row[3],
+                    "caminho": row[4],
+                })
+    return render_template("relatorios.html", relatorios=registros)
+
+@app.route("/download/<path:filename>")
+def download(filename):
+    caminho = os.path.join("relatorios", filename)
+    return send_file(caminho, as_attachment=True)
 
 if __name__ == "__main__":
     app.run(debug=True)

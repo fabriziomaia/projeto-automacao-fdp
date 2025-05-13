@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Relatórios Gerados</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/relatorios.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Relatórios Gerados</h1>
+        <table class="relatorio-table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Matrícula</th>
+                    <th>Cargo</th>
+                    <th>Data de Geração</th>
+                    <th>Download</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in relatorios %}
+                <tr>
+                    <td>{{ r.nome }}</td>
+                    <td>{{ r.matricula }}</td>
+                    <td>{{ r.cargo }}</td>
+                    <td>{{ r.data }}</td>
+                    <td><a class="btn-download" href="{{ url_for('download', filename=r.caminho.split('/')[-1]) }}">Baixar PDF</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a class="btn-back" href="{{ url_for('index') }}">⬅ Voltar</a>
+    </div>
+</body>
+</html>

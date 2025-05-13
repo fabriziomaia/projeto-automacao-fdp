@@ -33,12 +33,12 @@ input, button {
 }
 
 button {
-    background-color: #28a745;
+    background-color: #4d2cd0;
     color: white;
     font-weight: bold;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #218838;
+    background-color:  #3b21a3;
 }
