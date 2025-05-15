@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from fpdf import FPDF
 import csv
 from datetime import datetime
+import pandas as pd
 
 @dataclass
 class Funcionario:
@@ -110,34 +111,76 @@ def calcular_folha(f: Funcionario):
         "plano_saude": round(f.plano_saude, 2)
     }
 
-def gerar_pdf_folha(funcionario: Funcionario, calculo: dict):
-    pdf = FPDF()
-    pdf.add_page()
-    
-    pdf.set_title(f"Folha de Pagamento - {funcionario.nome}")
-    pdf.set_font("Arial", style="B", size=16)
-    pdf.cell(0, 10, f"Folha de Pagamento", ln=True, align='C')
-    pdf.ln(10)
+class PDF(FPDF):
+    def header(self):
+        # Logo no canto superior esquerdo (ajuste o caminho e tamanho conforme necessário)
+        self.image("logo.png", x=10, y=8, w=30)
 
-    pdf.set_font("Arial", size=12)
-    pdf.cell(0, 10, f"Funcionário: {funcionario.nome}", ln=True)
-    pdf.cell(0, 10, f"Matrícula: {funcionario.matricula}", ln=True)
-    pdf.cell(0, 10, f"Cargo: {funcionario.cargo}", ln=True)
+        self.set_font("Arial", "B", 14)
+        self.set_text_color(40, 40, 40)
+        self.set_xy(50, 10)  # Move o cursor para a direita da logo
+        self.cell(0, 10, "Decision - Desenvolvimento Humano & Organizacional", border=False, ln=True, align='C')
+        self.set_draw_color(200, 200, 200)
+        self.line(50, 20, 200, 20)
+        self.ln(5)
+
+    def footer(self):
+        self.set_y(-15)
+        self.set_font("Arial", "I", 8)
+        self.set_text_color(128)
+        self.cell(0, 10, f'Página {self.page_no()}', 0, 0, 'C')
+
+
+def gerar_pdf_folha(funcionario: Funcionario, calculo: dict):
+    pdf = PDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+
+    pdf.set_font("Arial", "B", 16)
+    pdf.set_text_color(0, 102, 204)
+    pdf.cell(0, 10, "Folha de Pagamento", ln=True, align='C')
     pdf.ln(5)
 
-    pdf.cell(0, 10, f"Salário Base: R$ {funcionario.salario_base:.2f}", ln=True)
-    pdf.cell(0, 10, f"Salário Bruto: R$ {calculo['salario_bruto']:.2f}", ln=True)
-    pdf.cell(0, 10, f"Vale Transporte: R$ {calculo['vale_transporte']:.2f}", ln=True)
-    pdf.cell(0, 10, f"Plano Saúde: R$ {calculo['plano_saude']:.2f}", ln=True)
-    pdf.cell(0, 10, f"INSS: R$ {calculo['inss']:.2f}", ln=True)
-    pdf.cell(0, 10, f"IRRF: R$ {calculo['irrf']:.2f}", ln=True)
-    pdf.cell(0, 10, f"Total de Descontos: R$ {calculo['total_descontos']:.2f}", ln=True)
-    pdf.cell(0, 10, f"Salário Líquido: R$ {calculo['salario_liquido']:.2f}", ln=True)
-    pdf.cell(0, 10, f"FGTS (8%): R$ {calculo['fgts']:.2f}", ln=True)
-    pdf.cell(0, 10, f"Custo Total da Empresa: R$ {calculo['custo_empresa']:.2f}", ln=True)
+    pdf.set_font("Arial", "B", 12)
+    pdf.set_text_color(0)
+    pdf.cell(0, 8, "Dados do Funcionário:", ln=True)
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 8, f"Nome: {funcionario.nome}", ln=True)
+    pdf.cell(0, 8, f"Matrícula: {funcionario.matricula}", ln=True)
+    pdf.cell(0, 8, f"Cargo: {funcionario.cargo}", ln=True)
+    pdf.ln(5)
 
-    caminho_pdf = f"./relatorios/folha_{funcionario.matricula}.pdf"
+    # Cabeçalho da tabela com Rubrica no início
+    pdf.set_fill_color(230, 230, 250)
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(30, 8, "Rubrica", border=1, fill=True)
+    pdf.cell(70, 8, "Descrição", border=1, fill=True)
+    pdf.cell(50, 8, "Valor (R$)", border=1, ln=True, fill=True)
+
+    pdf.set_font("Arial", "", 12)
+    def linha(rubrica, descricao, valor):
+        pdf.cell(30, 8, rubrica, border=1)
+        pdf.cell(70, 8, descricao, border=1)
+        pdf.cell(50, 8, f"{valor:.2f}", border=1, ln=True)
+
+    linha("", "Salário Base", funcionario.salario_base)
+    linha("", "Salário Bruto", calculo['salario_bruto'])
+    linha("", "Vale Transporte", calculo['vale_transporte'])
+    linha("", "Plano de Saúde", calculo['plano_saude'])
+    linha("", "INSS", calculo['inss'])
+    linha("", "IRRF", calculo['irrf'])
+    linha("", "Total de Descontos", calculo['total_descontos'])
+
+    pdf.set_font("Arial", "B", 12)
+    linha("", "Salário Líquido", calculo['salario_liquido'])
+    pdf.set_font("Arial", "", 12)
+    linha("", "FGTS (8%)", calculo['fgts'])
+    linha("", "Custo Total da Empresa", calculo['custo_empresa'])
+
+    caminho_pdf = f"./relatorios/folha_{funcionario.nome}.pdf"
     pdf.output(caminho_pdf)
+
+
 
     # Salvar no histórico
     with open("relatorios.csv", "a", newline="", encoding="utf-8") as file:
@@ -146,10 +189,31 @@ def gerar_pdf_folha(funcionario: Funcionario, calculo: dict):
             funcionario.nome,
             funcionario.matricula,
             funcionario.cargo,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            caminho_pdf
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         ])
 
+def gerar_excel_folha(funcionario: Funcionario, calculo: dict):
+    dados = {
+        "Funcionário": [funcionario.nome],
+        "Matrícula": [funcionario.matricula],
+        "Cargo": [funcionario.cargo],
+        "Salário Base": [funcionario.salario_base],
+        "Salário Bruto": [calculo["salario_bruto"]],
+        "Vale Transporte": [calculo["vale_transporte"]],
+        "Plano Saúde": [calculo["plano_saude"]],
+        "INSS": [calculo["inss"]],
+        "IRRF": [calculo["irrf"]],
+        "Total de Descontos": [calculo["total_descontos"]],
+        "Salário Líquido": [calculo["salario_liquido"]],
+        "FGTS (8%)": [calculo["fgts"]],
+        "Custo Total Empresa": [calculo["custo_empresa"]],
+        "Data": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")]
+    }
+
+    df = pd.DataFrame(dados)
+    caminho_excel = f"./relatorios/folha_{funcionario.nome}.xlsx"
+    df.to_excel(caminho_excel, index=False)
+    
 # funcionario = Funcionario(
 #     nome=input('Nome: '),
 #     matricula=input('Matrícula: '),

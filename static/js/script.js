@@ -1,3 +1,3 @@
 document.getElementById("formFolha").addEventListener("submit", function () {
-    alert("O PDF da folha será baixado automaticamente após o cálculo.");
+    alert("O Arquivo .zip da folha será baixado automaticamente após o cálculo.");
 });

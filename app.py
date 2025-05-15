@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, send_file
-from folha import Funcionario, calcular_folha, gerar_pdf_folha
+from folha import Funcionario, calcular_folha, gerar_pdf_folha, gerar_excel_folha
 import os
 import csv
+import zipfile
 
 app = Flask(__name__)
 os.makedirs("relatorios", exist_ok=True)
@@ -37,8 +38,23 @@ def calcular():
     )
 
     resultado = calcular_folha(funcionario)
-    gerar_pdf_folha(funcionario, resultado)      
-    return send_file(f"./relatorios/folha_{funcionario.matricula}.pdf", as_attachment=True)
+    gerar_pdf_folha(funcionario, resultado)
+    gerar_excel_folha(funcionario, resultado)
+    
+    # Definir os caminhos dos arquivos PDF e Excel
+    caminho_pdf = f"./relatorios/folha_{funcionario.nome}.pdf"
+    caminho_excel = f"./relatorios/folha_{funcionario.nome}.xlsx"
+
+    # Definir o caminho do arquivo ZIP
+    zip_path = f"./relatorios/folha_{funcionario.nome}.zip"
+
+    # Criar o arquivo ZIP com os dois arquivos
+    with zipfile.ZipFile(zip_path, 'w') as zipf:
+        zipf.write(caminho_pdf, os.path.basename(caminho_pdf))  # Adiciona o PDF ao ZIP
+        zipf.write(caminho_excel, os.path.basename(caminho_excel))  # Adiciona o Excel ao ZIP
+
+    # Enviar o arquivo ZIP
+    return send_file(zip_path, as_attachment=True, download_name=f"folha_{funcionario.nome}.zip")
 
 @app.route("/relatorios")
 def relatorios():
@@ -47,12 +63,14 @@ def relatorios():
         with open("relatorios.csv", newline="", encoding="utf-8") as file:
             reader = csv.reader(file)
             for row in reader:
+                nome = row[0]
                 registros.append({
-                    "nome": row[0],
+                    "nome": nome,
                     "matricula": row[1],
                     "cargo": row[2],
                     "data": row[3],
-                    "caminho": row[4],
+                    "pdf": f"folha_{nome}.pdf",
+                    "excel": f"folha_{nome}.xlsx"
                 })
     return render_template("relatorios.html", relatorios=registros)
 
